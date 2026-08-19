@@ -7,13 +7,20 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import android.location.Geocoder
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -26,7 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvLongitude: TextView
     private lateinit var tvAccuracy: TextView
     private lateinit var tvTimestamp: TextView
-    private lateinit var tvStatus: TextView
+
 
     private val locationPermissionRequestCode = 100
 
@@ -40,7 +47,6 @@ class MainActivity : AppCompatActivity() {
         tvLongitude = findViewById(R.id.tvLongitude)
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvTimestamp = findViewById(R.id.tvTimestamp)
-        tvStatus = findViewById(R.id.tvStatus)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -101,7 +107,7 @@ class MainActivity : AppCompatActivity() {
 
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val date = Date(location.time)
-        tvTimestamp.text = "Time: ${sdf.format(date)}"
+
     }
 
     override fun onRequestPermissionsResult(
