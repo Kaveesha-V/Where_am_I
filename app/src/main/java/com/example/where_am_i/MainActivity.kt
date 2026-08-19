@@ -33,6 +33,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvLongitude: TextView
     private lateinit var tvAccuracy: TextView
     private lateinit var tvTimestamp: TextView
+    private lateinit var tvStatus: TextView
+    private lateinit var tvAddress: TextView
 
 
     private val locationPermissionRequestCode = 100
@@ -47,6 +49,8 @@ class MainActivity : AppCompatActivity() {
         tvLongitude = findViewById(R.id.tvLongitude)
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvTimestamp = findViewById(R.id.tvTimestamp)
+        tvStatus = findViewById(R.id.tvStatus)
+        tvAddress = findViewById(R.id.tvAddress)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -61,6 +65,7 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+            tvStatus.visibility = android.view.View.VISIBLE
             tvStatus.text = "Requesting permission..."
             ActivityCompat.requestPermissions(
                 this,
@@ -78,10 +83,12 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+            tvStatus.visibility = android.view.View.VISIBLE
             tvStatus.text = "Permission not granted"
             return
         }
 
+        tvStatus.visibility = android.view.View.VISIBLE
         tvStatus.text = "Fetching location..."
         val cts = CancellationTokenSource()
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token)
@@ -107,7 +114,8 @@ class MainActivity : AppCompatActivity() {
 
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val date = Date(location.time)
-
+        tvTimestamp.text = "Last updated: ${sdf.format(date)}"
+        tvStatus.visibility = android.view.View.GONE
     }
 
     override fun onRequestPermissionsResult(
@@ -120,6 +128,7 @@ class MainActivity : AppCompatActivity() {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 getLocation()
             } else {
+                tvStatus.visibility = android.view.View.VISIBLE
                 tvStatus.text = "Permission denied"
                 Toast.makeText(this, "Permission denied. Cannot fetch location.", Toast.LENGTH_SHORT).show()
             }
