@@ -2,7 +2,9 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.Where_am_I" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/primary_purple</item>
+        <item name="android:statusBarColor">@color/primary_purple_dark</item>
+        <item name="android:windowBackground">@color/bg_lavender</item>
     </style>
 
     <style name="Theme.Where_am_I" parent="Base.Theme.Where_am_I" />
