@@ -2,72 +2,112 @@ package com.example.where_am_i
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
+import android.widget.Toast
+import android.location.Geocoder
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
-    private val LOCATION_PERMISSION_REQUEST_CODE = 100
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var btnGetLocation: Button
-    private lateinit var tvStatus: TextView
+    private lateinit var tvLatitude: TextView
+    private lateinit var tvLongitude: TextView
+    private lateinit var tvAccuracy: TextView
+    private lateinit var tvTimestamp: TextView
+
+
+    private val locationPermissionRequestCode = 100
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
+        // Bind views
         btnGetLocation = findViewById(R.id.btnGetLocation)
-        tvStatus = findViewById(R.id.tvStatus)
+        tvLatitude = findViewById(R.id.tvLatitude)
+        tvLongitude = findViewById(R.id.tvLongitude)
+        tvAccuracy = findViewById(R.id.tvAccuracy)
+        tvTimestamp = findViewById(R.id.tvTimestamp)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         btnGetLocation.setOnClickListener {
-            checkAndRequestLocationPermission()
+            checkLocationPermission()
         }
     }
 
-    fun hasLocationPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    fun checkAndRequestLocationPermission() {
-        if (hasLocationPermission()) {
-            fetchCurrentLocation()
-        } else {
+    private fun checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            tvStatus.text = "Requesting permission..."
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ),
-                LOCATION_PERMISSION_REQUEST_CODE
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                locationPermissionRequestCode
             )
+        } else {
+            getLocation()
         }
     }
 
-    fun showPermissionDeniedMessage() {
-        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            tvStatus.text = "Location permission is required to use this feature."
-        } else {
-            tvStatus.text = "Permission permanently denied. Please enable it in Settings."
+    private fun getLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            tvStatus.text = "Permission not granted"
+            return
         }
+
+        tvStatus.text = "Fetching location..."
+        val cts = CancellationTokenSource()
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token)
+            .addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    updateUI(location)
+                    tvStatus.text = "Location updated successfully"
+                } else {
+                    tvStatus.text = "Location not available"
+                    Toast.makeText(this, "Location wasn't available.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener {
+                tvStatus.text = "Failed: ${it.message}"
+                Toast.makeText(this, "Failed to get location: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun updateUI(location: Location) {
+        tvLatitude.text = "Latitude: ${location.latitude}"
+        tvLongitude.text = "Longitude: ${location.longitude}"
+        tvAccuracy.text = "Accuracy: ${location.accuracy}m"
+
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val date = Date(location.time)
+
     }
 
     override fun onRequestPermissionsResult(
@@ -76,18 +116,13 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && (grantResults[0] == PackageManager.PERMISSION_GRANTED ||
-                        grantResults[1] == PackageManager.PERMISSION_GRANTED)) {
-                fetchCurrentLocation()
+        if (requestCode == locationPermissionRequestCode) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getLocation()
             } else {
-                showPermissionDeniedMessage()
+                tvStatus.text = "Permission denied"
+                Toast.makeText(this, "Permission denied. Cannot fetch location.", Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    private fun fetchCurrentLocation() {
-        // TODO: Member 4's function
-        tvStatus.text = "Fetching location..."
     }
 }
