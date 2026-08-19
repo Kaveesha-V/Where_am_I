@@ -24,4 +24,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Where_am_I"
 include(":app")
- 

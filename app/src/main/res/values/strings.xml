@@ -1,8 +1,3 @@
 <resources>
     <string name="app_name">Where_am_I</string>
-    <string name="get_location">Get Location</string>
-    <string name="latitude_label">Latitude: </string>
-    <string name="longitude_label">Longitude: </string>
-    <string name="accuracy_label">Accuracy: </string>
-    <string name="timestamp_label">Timestamp: </string>
 </resources>
