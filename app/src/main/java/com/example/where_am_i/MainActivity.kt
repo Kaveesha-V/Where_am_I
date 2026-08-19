@@ -7,12 +7,14 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.ImageView
 import android.location.Geocoder
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import coil.load
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -35,6 +37,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvTimestamp: TextView
     private lateinit var tvStatus: TextView
     private lateinit var tvAddress: TextView
+    private lateinit var ivStaticMap: ImageView
+    private lateinit var tvMapPlaceholder: TextView
 
 
     private val locationPermissionRequestCode = 100
@@ -51,6 +55,8 @@ class MainActivity : AppCompatActivity() {
         tvTimestamp = findViewById(R.id.tvTimestamp)
         tvStatus = findViewById(R.id.tvStatus)
         tvAddress = findViewById(R.id.tvAddress)
+        ivStaticMap = findViewById(R.id.ivStaticMap)
+        tvMapPlaceholder = findViewById(R.id.tvMapPlaceholder)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -116,6 +122,16 @@ class MainActivity : AppCompatActivity() {
         val date = Date(location.time)
         tvTimestamp.text = "Last updated: ${sdf.format(date)}"
         tvStatus.visibility = android.view.View.GONE
+
+        // Load Static Map
+        val mapUrl = "https://static-maps.yandex.ru/1.x/?ll=${location.longitude},${location.latitude}&z=14&l=map&size=600,300&pt=${location.longitude},${location.latitude},pm2rdm"
+        ivStaticMap.load(mapUrl) {
+            crossfade(true)
+            listener(
+                onSuccess = { _, _ -> tvMapPlaceholder.visibility = android.view.View.GONE },
+                onError = { _, _ -> tvMapPlaceholder.text = "Map failed to load" }
+            )
+        }
     }
 
     override fun onRequestPermissionsResult(
