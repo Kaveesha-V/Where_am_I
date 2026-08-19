@@ -7,13 +7,20 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import android.location.Geocoder
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -26,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvLng: TextView
     private lateinit var tvAccuracy: TextView
     private lateinit var tvTimestamp: TextView
+    private lateinit var tvAddress: TextView
 
     private val locationPermissionRequestCode = 100
 
@@ -39,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         tvLng = findViewById(R.id.tvLng)
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvTimestamp = findViewById(R.id.tvTimestamp)
+        tvAddress = findViewById(R.id.tvAddress)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -96,6 +105,43 @@ class MainActivity : AppCompatActivity() {
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val date = Date(location.time)
         tvTimestamp.text = "Timestamp: ${sdf.format(date)}"
+
+        fetchAddress(location)
+    }
+
+    private fun fetchAddress(location: Location) {
+        val geocoder = Geocoder(this, Locale.getDefault())
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            geocoder.getFromLocation(location.latitude, location.longitude, 1) { addresses ->
+                runOnUiThread {
+                    if (addresses.isNotEmpty()) {
+                        val address = addresses[0].getAddressLine(0)
+                        tvAddress.text = "Address: $address"
+                    } else {
+                        tvAddress.text = "Address: Not found"
+                    }
+                }
+            }
+        } else {
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                    withContext(Dispatchers.Main) {
+                        if (!addresses.isNullOrEmpty()) {
+                            val address = addresses[0].getAddressLine(0)
+                            tvAddress.text = "Address: $address"
+                        } else {
+                            tvAddress.text = "Address: Not found"
+                        }
+                    }
+                } catch (e: IOException) {
+                    withContext(Dispatchers.Main) {
+                        tvAddress.text = "Address: Error fetching address"
+                    }
+                }
+            }
+        }
     }
 
     override fun onRequestPermissionsResult(
