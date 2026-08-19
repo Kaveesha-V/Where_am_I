@@ -11,22 +11,52 @@
         android:id="@+id/btnGetLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Get Location"
-        app:layout_constraintBottom_toTopOf="@+id/tvStatus"
+        android:text="@string/get_location"
+        app:layout_constraintBottom_toTopOf="@+id/tvLat"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed" />
 
     <TextView
-        android:id="@+id/tvStatus"
+        android:id="@+id/tvLat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Status will appear here"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:text="@string/latitude_label"
+        app:layout_constraintBottom_toTopOf="@+id/tvLng"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnGetLocation" />
+
+    <TextView
+        android:id="@+id/tvLng"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/longitude_label"
+        app:layout_constraintBottom_toTopOf="@+id/tvAccuracy"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvLat" />
+
+    <TextView
+        android:id="@+id/tvAccuracy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/accuracy_label"
+        app:layout_constraintBottom_toTopOf="@+id/tvTimestamp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvLng" />
+
+    <TextView
+        android:id="@+id/tvTimestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/timestamp_label"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvAccuracy" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
