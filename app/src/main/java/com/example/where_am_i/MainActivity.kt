@@ -7,12 +7,14 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.ImageView
 import android.location.Geocoder
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import coil.load
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -33,6 +35,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvLongitude: TextView
     private lateinit var tvAccuracy: TextView
     private lateinit var tvTimestamp: TextView
+    private lateinit var tvStatus: TextView
+    private lateinit var tvAddress: TextView
+    private lateinit var ivStaticMap: ImageView
+    private lateinit var tvMapPlaceholder: TextView
 
 
     private val locationPermissionRequestCode = 100
@@ -47,6 +53,10 @@ class MainActivity : AppCompatActivity() {
         tvLongitude = findViewById(R.id.tvLongitude)
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvTimestamp = findViewById(R.id.tvTimestamp)
+        tvStatus = findViewById(R.id.tvStatus)
+        tvAddress = findViewById(R.id.tvAddress)
+        ivStaticMap = findViewById(R.id.ivStaticMap)
+        tvMapPlaceholder = findViewById(R.id.tvMapPlaceholder)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -61,6 +71,7 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+            tvStatus.visibility = android.view.View.VISIBLE
             tvStatus.text = "Requesting permission..."
             ActivityCompat.requestPermissions(
                 this,
@@ -78,10 +89,12 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+            tvStatus.visibility = android.view.View.VISIBLE
             tvStatus.text = "Permission not granted"
             return
         }
 
+        tvStatus.visibility = android.view.View.VISIBLE
         tvStatus.text = "Fetching location..."
         val cts = CancellationTokenSource()
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token)
@@ -107,7 +120,18 @@ class MainActivity : AppCompatActivity() {
 
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val date = Date(location.time)
+        tvTimestamp.text = "Last updated: ${sdf.format(date)}"
+        tvStatus.visibility = android.view.View.GONE
 
+        // Load Static Map
+        val mapUrl = "https://static-maps.yandex.ru/1.x/?ll=${location.longitude},${location.latitude}&z=14&l=map&size=600,300&pt=${location.longitude},${location.latitude},pm2rdm"
+        ivStaticMap.load(mapUrl) {
+            crossfade(true)
+            listener(
+                onSuccess = { _, _ -> tvMapPlaceholder.visibility = android.view.View.GONE },
+                onError = { _, _ -> tvMapPlaceholder.text = "Map failed to load" }
+            )
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -120,6 +144,7 @@ class MainActivity : AppCompatActivity() {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 getLocation()
             } else {
+                tvStatus.visibility = android.view.View.VISIBLE
                 tvStatus.text = "Permission denied"
                 Toast.makeText(this, "Permission denied. Cannot fetch location.", Toast.LENGTH_SHORT).show()
             }
