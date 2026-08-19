@@ -133,6 +133,7 @@
                         android:fontFamily="sans-serif-medium" />
                 </LinearLayout>
             </LinearLayout>
+    android:background="#F8F9FA"
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>
@@ -338,5 +339,9 @@
             app:tint="@color/text_grey" />
 
     </LinearLayout>
+    <!-- Error/Status Message (Hidden by default) -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
 
 </androidx.constraintlayout.widget.ConstraintLayout>
