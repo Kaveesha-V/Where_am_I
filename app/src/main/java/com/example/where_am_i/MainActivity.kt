@@ -29,11 +29,11 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var btnGetLocation: Button
-    private lateinit var tvLat: TextView
-    private lateinit var tvLng: TextView
+    private lateinit var tvLatitude: TextView
+    private lateinit var tvLongitude: TextView
     private lateinit var tvAccuracy: TextView
     private lateinit var tvTimestamp: TextView
-    private lateinit var tvAddress: TextView
+
 
     private val locationPermissionRequestCode = 100
 
@@ -43,11 +43,10 @@ class MainActivity : AppCompatActivity() {
 
         // Bind views
         btnGetLocation = findViewById(R.id.btnGetLocation)
-        tvLat = findViewById(R.id.tvLat)
-        tvLng = findViewById(R.id.tvLng)
+        tvLatitude = findViewById(R.id.tvLatitude)
+        tvLongitude = findViewById(R.id.tvLongitude)
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvTimestamp = findViewById(R.id.tvTimestamp)
-        tvAddress = findViewById(R.id.tvAddress)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -62,14 +61,13 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // Permission not granted, request it
+            tvStatus.text = "Requesting permission..."
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 locationPermissionRequestCode
             )
         } else {
-            // Permission already granted, fetch location
             getLocation()
         }
     }
@@ -80,68 +78,36 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+            tvStatus.text = "Permission not granted"
             return
         }
 
+        tvStatus.text = "Fetching location..."
         val cts = CancellationTokenSource()
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token)
             .addOnSuccessListener { location: Location? ->
                 if (location != null) {
                     updateUI(location)
+                    tvStatus.text = "Location updated successfully"
                 } else {
+                    tvStatus.text = "Location not available"
                     Toast.makeText(this, "Location wasn't available.", Toast.LENGTH_SHORT).show()
                 }
             }
             .addOnFailureListener {
+                tvStatus.text = "Failed: ${it.message}"
                 Toast.makeText(this, "Failed to get location: ${it.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun updateUI(location: Location) {
-        tvLat.text = "Latitude: ${location.latitude}"
-        tvLng.text = "Longitude: ${location.longitude}"
+        tvLatitude.text = "Latitude: ${location.latitude}"
+        tvLongitude.text = "Longitude: ${location.longitude}"
         tvAccuracy.text = "Accuracy: ${location.accuracy}m"
 
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val date = Date(location.time)
-        tvTimestamp.text = "Timestamp: ${sdf.format(date)}"
 
-        fetchAddress(location)
-    }
-
-    private fun fetchAddress(location: Location) {
-        val geocoder = Geocoder(this, Locale.getDefault())
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            geocoder.getFromLocation(location.latitude, location.longitude, 1) { addresses ->
-                runOnUiThread {
-                    if (addresses.isNotEmpty()) {
-                        val address = addresses[0].getAddressLine(0)
-                        tvAddress.text = "Address: $address"
-                    } else {
-                        tvAddress.text = "Address: Not found"
-                    }
-                }
-            }
-        } else {
-            lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-                    withContext(Dispatchers.Main) {
-                        if (!addresses.isNullOrEmpty()) {
-                            val address = addresses[0].getAddressLine(0)
-                            tvAddress.text = "Address: $address"
-                        } else {
-                            tvAddress.text = "Address: Not found"
-                        }
-                    }
-                } catch (e: IOException) {
-                    withContext(Dispatchers.Main) {
-                        tvAddress.text = "Address: Error fetching address"
-                    }
-                }
-            }
-        }
     }
 
     override fun onRequestPermissionsResult(
@@ -152,10 +118,9 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == locationPermissionRequestCode) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted
                 getLocation()
             } else {
-                // Permission denied
+                tvStatus.text = "Permission denied"
                 Toast.makeText(this, "Permission denied. Cannot fetch location.", Toast.LENGTH_SHORT).show()
             }
         }
