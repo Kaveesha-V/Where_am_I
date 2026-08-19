@@ -36,7 +36,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvAccuracy: TextView
     private lateinit var tvTimestamp: TextView
     private lateinit var tvStatus: TextView
-    private lateinit var tvAddress: TextView
     private lateinit var ivStaticMap: ImageView
     private lateinit var tvMapPlaceholder: TextView
 
@@ -54,7 +53,6 @@ class MainActivity : AppCompatActivity() {
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvTimestamp = findViewById(R.id.tvTimestamp)
         tvStatus = findViewById(R.id.tvStatus)
-        tvAddress = findViewById(R.id.tvAddress)
         ivStaticMap = findViewById(R.id.ivStaticMap)
         tvMapPlaceholder = findViewById(R.id.tvMapPlaceholder)
 
